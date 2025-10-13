@@ -15,7 +15,7 @@ def get_file_content(working_directory, file_path):
             file_content_string = f.read(MAX_CHARS)
             if len(file_content_string) >= MAX_CHARS:
                 file_content_string = file_content_string + f'[...File "{file_path}" truncated at 10000 characters]'
-            return print(file_content_string)
+            return file_content_string
         
 
 schema_get_file_content = types.FunctionDeclaration(

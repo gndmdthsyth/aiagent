@@ -21,7 +21,7 @@ def get_files_info(working_directory, directory="."):
 
 
 
-        return print(result)
+        return result
     
 schema_get_files_info = types.FunctionDeclaration(
     name="get_files_info",

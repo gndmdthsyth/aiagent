@@ -14,8 +14,8 @@ def write_file(working_directory, file_path, content):
     else:
         with open(path, "w") as f:
             f.write(content)
-        return print(f'Successfully wrote to "{file_path}" ({len(content)} characters written)'
-)
+        return f'Successfully wrote to "{file_path}" ({len(content)} characters written)'
+
     
 schema_write_file = types.FunctionDeclaration(
     name="write_file",

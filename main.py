@@ -6,6 +6,8 @@ from functions.get_files_info import schema_get_files_info
 from functions.get_file_content import schema_get_file_content
 from functions.write_file import schema_write_file
 from functions.run_python_file import schema_run_python_file
+from functions.call_function import call_function
+
 load_dotenv()
 api_key = os.environ.get("GEMINI_API_KEY")
 
@@ -35,10 +37,23 @@ def main():
     response = client.models.generate_content(
     model='gemini-2.0-flash-001', contents=messages, config=types.GenerateContentConfig(tools = [available_functions],system_instruction=system_prompt
     ))
-    #print(response.text)
-    for call in response.function_calls:
-        print(f"Calling function: {str(call.name)}({str(call.args)})")
-    print(response.text)
+    for candidate in response.candidates:
+        messages.append(candidate.content)
+
+    print(messages)
+    calls = response.function_calls or []
+    if not calls:
+        raise RuntimeError("Model returned no function calls")
+    
+    for call in calls:
+        result = call_function(call, verbose="--verbose" in sys.argv)
+        if not result.parts or not result.parts[0].function_response:
+            raise RuntimeError("Function response is missing")
+        print(f"-> {result.parts[0].function_response.response}")
+        func_result = result.parts[0].function_response.response
+        messages.append(types.Content(role="user", parts=types.Part(text=func_result[result])))
+        print(messages)
+    
     if "--verbose" in sys.argv:
         print(f"User prompt: {user_prompt}")
         print(f"Prompt tokens: {response.usage_metadata.prompt_token_count}")

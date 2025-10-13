@@ -1,4 +1,5 @@
 MAX_CHARS = 10000
+CWD = "./calculator"
 system_prompt = """
 You are a helpful AI coding agent.
 

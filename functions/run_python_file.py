@@ -18,12 +18,15 @@ def run_python_file(working_directory, file_path, args=[]):
     else:
         run_path = ["python", path, *args]
         result = subprocess.run(run_path, capture_output=True, timeout=30, text=True)
-        if not result.stdout:
-            return print("No output produced")
+        out = result.stdout
+        err = result.stderr
+        if result.stdout == "" and result.stderr == "":
+            return "No output produced"
         elif result.returncode != 0:
-            return print(f"STDOUT: {result.stdout}STDERR: {result.stderr} Process exited with code {result.returncode}")
-        
-        return print(f"STDOUT: {result.stdout}STDERR: {result.stderr}")
+            print(f"[DEBUG] returncode={result.returncode}, out_len={len(out)}, err_len={len(err)}")
+            return f"STDOUT: {out}STDERR: {err} Process exited with code {result.returncode}"
+        print(f"[DEBUG] returncode={result.returncode}, out_len={len(out)}, err_len={len(err)}")
+        return f"STDOUT: {out}STDERR: {err}"
     
 
 schema_run_python_file = types.FunctionDeclaration(
