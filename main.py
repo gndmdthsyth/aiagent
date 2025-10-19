@@ -30,34 +30,47 @@ available_functions = types.Tool(
 
 def main():
     #print(sys.argv[1])
+    count = 0
     if len(sys.argv) == 1:
         print("ERROR exiting.")
         sys.exit(1)
-
-    response = client.models.generate_content(
-    model='gemini-2.0-flash-001', contents=messages, config=types.GenerateContentConfig(tools = [available_functions],system_instruction=system_prompt
-    ))
-    for candidate in response.candidates:
-        messages.append(candidate.content)
-
-    print(messages)
-    calls = response.function_calls or []
-    if not calls:
-        raise RuntimeError("Model returned no function calls")
+    while count < 20:
+        count += 1
+        #print(count)
+        try:
+            response = client.models.generate_content(
+            model='gemini-2.0-flash-001', contents=messages, config=types.GenerateContentConfig(tools = [available_functions],system_instruction=system_prompt
+            ))
+        except Exception as e:
+            print(f"Error: {e}")
+        if response.text != "" and not response.function_calls:
+            print(str(response.text))
+            break
     
-    for call in calls:
-        result = call_function(call, verbose="--verbose" in sys.argv)
-        if not result.parts or not result.parts[0].function_response:
-            raise RuntimeError("Function response is missing")
-        print(f"-> {result.parts[0].function_response.response}")
-        func_result = result.parts[0].function_response.response
-        messages.append(types.Content(role="user", parts=types.Part(text=func_result[result])))
-        print(messages)
+        for candidate in response.candidates:
+            messages.append(candidate.content)
     
-    if "--verbose" in sys.argv:
-        print(f"User prompt: {user_prompt}")
-        print(f"Prompt tokens: {response.usage_metadata.prompt_token_count}")
-        print(f"Response tokens: {response.usage_metadata.candidates_token_count}")
+        #print(messages)
+        calls = response.function_calls or []
+        if not calls:
+            raise RuntimeError("Model returned no function calls")
+    
+        for call in calls:
+            result = call_function(call, verbose="--verbose" in sys.argv)
+            if not result.parts or not result.parts[0].function_response:
+                raise RuntimeError("Function response is missing")
+            #print(f"-> {result.parts[0].function_response.response}")
+            func_result = result.parts[0].function_response.response["result"]
+            #print(func_result)
+            #text_part  = types.Part.from_text(str(func_result))
+            func_message = types.Content(role="user", parts=[types.Part(text=func_result)])
+            messages.append(func_message)
+            #print(messages)
+    
+        if "--verbose" in sys.argv:
+            print(f"User prompt: {user_prompt}")
+            print(f"Prompt tokens: {response.usage_metadata.prompt_token_count}")
+            print(f"Response tokens: {response.usage_metadata.candidates_token_count}")
 
 
 if __name__ == "__main__":
